@@ -27,7 +27,7 @@ if (typeof __firebase_config !== 'undefined') {
   firebaseConfig = JSON.parse(__firebase_config); 
 } else {
   firebaseConfig = {
-    apiKey: 'AIzaSyA8Alqjx9zfAyVo6oKmv2VAjvqGJWN8TvE',
+    apiKey: 'enter_your_api_key_here',
     authDomain: 'culturalheritagearchive-794fb.firebaseapp.com',
     projectId: 'culturalheritagearchive-794fb',
     storageBucket: 'culturalheritagearchive-794fb.firebasestorage.app',
@@ -900,7 +900,7 @@ async function getBotResponse(userQuery) {
     // ============================= FIX =============================
     // 1. Get your API key from Google AI Studio: https://aistudio.google.com/app/apikey
     // 2. Paste your key between the quotes.
-    const apiKey = "AIzaSyDuBeUF9Lsms_M6C5IW_KUWfyqeRYciZ9U"; // <-- PASTE YOUR API KEY HERE
+    const apiKey = "enter_your_api_key_here"; // <-- PASTE YOUR API KEY HERE
     // ===============================================================
 
     // FIX: Check if the key is missing (for local testing)
