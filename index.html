@@ -1,0 +1,724 @@
+<!-- TEST DEPLOY -->
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Echoes of the Past: Cultural Heritage Digital Archives of India
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Orbit Controls for mouse interaction -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- GLTF Loader to load external 3D models -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- Draco Loader for compressed geometry (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #fff7ed; /* orange-50 */
+      }
+      .font-lora {
+        font-family: 'Lora', serif;
+      }
+      .font-times {
+        font-family: 'Times New Roman', Times, serif;
+      }
+      .hero-section {
+        position: relative;
+        background-image: url('https://www.noblehousetours.com/wp-content/uploads/2025/04/How-To-Visit-The-Ajanta-And-Ellora-Caves-From-Aurangabad-%E2%80%93-Complete-Guide-1.jpg');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed; /* Parallax effect */
+      }
+      .hero-overlay {
+        background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+      }
+      .modal-bg {
+        background-color: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(5px);
+      }
+      .modal-content {
+        max-height: 90vh;
+      }
+      .nav-link {
+        position: relative;
+        transition: color 0.3s;
+      }
+      .nav-link::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ea580c; /* orange-600 */
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .nav-link:hover::after,
+      .nav-link.active::after {
+        width: 100%;
+      }
+      .category-btn {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .category-btn:hover {
+        transform: translateY(-2px);
+      }
+      .category-btn.active {
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 4px 6px -1px rgba(194, 65, 12, 0.3);
+      }
+      
+      /* Card Hover Effects */
+      .artifact-card, .tour-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .artifact-card:hover, .tour-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .card-image-container {
+        overflow: hidden;
+      }
+      .card-image-container img {
+        transition: transform 0.5s ease;
+      }
+      .artifact-card:hover img, .tour-card:hover img {
+        transform: scale(1.05);
+      }
+
+      /* Skeleton Loading Animation */
+      @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+      }
+      .skeleton {
+        animation: shimmer 2s infinite linear;
+        background: linear-gradient(to right, #f3f4f6 4%, #e5e7eb 25%, #f3f4f6 36%);
+        background-size: 1000px 100%;
+      }
+
+      #three-d-viewer {
+        width: 100%;
+        height: 400px;
+        border-radius: 0.5rem;
+        cursor: grab;
+      }
+      #three-d-viewer:grabbing {
+        cursor: grabbing;
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #fff7ed;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #fb923c;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #ea580c;
+      }
+
+      /* --- CHATBOT STYLES --- */
+      #chat-window-container {
+        /* Full screen overlay */
+        transition: opacity 0.3s ease;
+      }
+      #chat-window {
+        /* The centered content box */
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        max-height: 90vh; /* Ensure it doesn't overflow viewport height */
+      }
+      .chat-bubble-user {
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        color: white;
+      }
+      .chat-bubble-bot {
+        background-color: #f3f4f6; /* gray-100 */
+        color: #1f2937; /* gray-800 */
+      }
+      /* Chat loading dots */
+      @keyframes dots {
+        0%, 20% { content: '.'; }
+        40% { content: '..'; }
+        60%, 100% { content: '...'; }
+      }
+      .loading-dots::after {
+        content: '.';
+        animation: dots 1.4s infinite;
+      }
+      /* Custom scrollbar for chat */
+      #chat-messages::-webkit-scrollbar {
+        width: 6px;
+      }
+      #chat-messages::-webkit-scrollbar-thumb {
+        background: #fdba74; /* orange-300 */
+        border-radius: 10px;
+      }
+      #chat-messages::-webkit-scrollbar-thumb:hover {
+        background: #f97316; /* orange-500 */
+      }
+    </style>
+  </head>
+  <body class="text-gray-800 bg-orange-50/30">
+    <!-- Main Application View -->
+    <div id="main-app">
+      <!-- Header -->
+      <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-40 transition-all duration-300">
+        <nav
+          class="container mx-auto px-6 py-4 flex justify-between items-center"
+        >
+          <a href="#" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-700 to-red-800 font-lora flex items-center gap-2"
+            ><span class="text-3xl">🏛️</span> Echoes of the Past</a
+          >
+          <div class="hidden md:flex items-center space-x-8">
+            <a
+              href="#archives"
+              class="nav-link active text-gray-700 hover:text-orange-600 font-medium"
+              >Archives</a
+            >
+            <a
+              href="#tours"
+              class="nav-link text-gray-700 hover:text-orange-600 font-medium"
+              >Virtual Tours</a
+            >
+            <a
+              href="#about"
+              class="nav-link text-gray-700 hover:text-orange-600 font-medium"
+              >About</a
+            >
+          </div>
+          <button id="mobile-menu-button" class="md:hidden focus:outline-none text-orange-800">
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16m-7 6h7"
+              ></path>
+            </svg>
+          </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4 bg-white border-t">
+          <a
+            href="#archives"
+            class="block py-2 text-gray-700 hover:text-orange-600 font-medium"
+            >Archives</a
+          >
+          <a
+            href="#tours"
+            class="block py-2 text-gray-700 hover:text-orange-600 font-medium"
+            >Virtual Tours</a
+          >
+          <a
+            href="#about"
+            class="block py-2 text-gray-700 hover:text-orange-600 font-medium"
+            >About</a
+          >
+        </div>
+      </header>
+
+      <!-- Hero Section -->
+      <section class="hero-section text-white h-[60vh] flex items-center justify-center">
+        <div class="hero-overlay absolute inset-0 z-0"></div>
+        <div class="container mx-auto px-6 text-center relative z-10" data-aos="zoom-in" data-aos-duration="1000">
+          <h1
+            class="text-4xl md:text-7xl font-bold mb-6 font-lora tracking-tight drop-shadow-lg"
+          >
+            Digital Archives of India
+          </h1>
+          <div class="w-24 h-1 bg-orange-500 mx-auto mb-6 rounded-full"></div>
+          <p
+            class="text-lg md:text-2xl max-w-3xl mx-auto font-light tracking-wide text-orange-50 drop-shadow-md"
+          >
+            Preserving and Showcasing the Rich Tapestry of Indian Cultural
+            Heritage.
+          </p>
+          <a href="#archives" class="inline-block mt-8 px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-full hover:from-orange-700 hover:to-red-700 transition-all transform hover:scale-105 shadow-lg">
+            Start Exploring
+          </a>
+        </div>
+      </section>
+
+      <!-- Main Content -->
+      <main class="container mx-auto p-6 md:p-8">
+        <!-- Archives Section -->
+        <section id="archives" class="py-16">
+          <div class="text-center mb-12" data-aos="fade-up">
+            <span class="text-orange-600 font-bold tracking-wider uppercase text-sm">Collection</span>
+            <h2 class="text-4xl font-bold font-lora text-gray-900 mt-2">Explore the Archives</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto mt-4">
+                Discover artifacts, manuscripts, and art forms that tell the story of India's vibrant past.
+            </p>
+          </div>
+          
+          <div
+            class="mb-10 flex flex-col md:flex-row gap-4 justify-center items-center"
+            data-aos="fade-up" data-aos-delay="100"
+          >
+            <div class="relative w-full md:w-1/2 group">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search for artifacts (e.g., 'Chola bronze')..."
+                class="w-full p-4 pl-12 border-2 border-gray-200 rounded-full focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all"
+              />
+              <svg
+                class="w-6 h-6 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-orange-500 transition-colors"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+            </div>
+          </div>
+          
+          <div
+            id="categoryFilters"
+            class="flex flex-wrap gap-3 justify-center mb-12"
+            data-aos="fade-up" data-aos-delay="200"
+          ></div>
+          
+          <div
+            id="artifactsGrid"
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+          >
+            <!-- Skeletons will be injected here by JS initially -->
+          </div>
+          
+          <div id="no-results" class="hidden text-center col-span-full py-12">
+            <div class="text-6xl mb-4">🔍</div>
+            <p class="text-xl text-gray-600 font-medium">
+              No artifacts found matching your criteria.
+            </p>
+            <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'));" class="mt-4 text-orange-600 hover:underline">Clear Search</button>
+          </div>
+        </section>
+
+        <!-- Virtual Tours Section -->
+        <section id="tours" class="py-20 bg-orange-50 rounded-3xl my-12 relative overflow-hidden">
+          <!-- Decorative background element -->
+          <div class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-orange-100 rounded-full opacity-50 blur-3xl"></div>
+          <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-red-100 rounded-full opacity-50 blur-3xl"></div>
+          
+          <div class="relative z-10">
+            <div class="text-center mb-12" data-aos="fade-up">
+                <span class="text-orange-600 font-bold tracking-wider uppercase text-sm">Immersive Experience</span>
+                <h2 class="text-4xl font-bold font-lora text-gray-900 mt-2">360° Panoramic Views</h2>
+            </div>
+            
+            <div
+                id="toursGrid"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-8"
+            >
+                <!-- Tours rendered by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-16">
+          <div class="max-w-4xl mx-auto text-center bg-white p-10 rounded-2xl shadow-sm border border-orange-100" data-aos="zoom-in-up">
+            <h2
+              class="text-3xl font-bold text-center mb-6 font-lora text-gray-900"
+            >
+              About Echoes of the Past
+            </h2>
+            <div class="w-16 h-1 bg-gradient-to-r from-orange-500 to-red-500 mx-auto mb-6 rounded-full"></div>
+            <p class="text-gray-700 leading-relaxed text-lg">
+              "Echoes of the Past" is a digital initiative dedicated to the
+              preservation and global celebration of India's immense cultural
+              heritage. We leverage modern web technologies to bring ancient history to life, making it accessible to students, researchers, and history enthusiasts worldwide.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-gradient-to-b from-gray-800 to-gray-900 text-white py-12 mt-12">
+        <div class="container mx-auto px-6 text-center">
+          <div class="mb-6 text-4xl">🏛️</div>
+          <h3 class="text-xl font-bold font-lora mb-2">Echoes of the Past</h3>
+          <p class="text-gray-400 mb-8 text-sm">Preserving Heritage • Inspiring Future</p>
+          <div class="border-t border-gray-700 pt-8">
+            <p class="text-gray-400 text-sm">
+                &copy; 2024 Echoes of the Past. All Rights Reserved.
+            </p>
+            <button
+                id="admin-login-btn"
+                class="text-xs text-gray-600 mt-4 hover:text-orange-400 transition-colors"
+            >
+                Admin Access
+            </button>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Admin Panel / CMS -->
+    <div id="admin-panel" class="hidden bg-gray-50 min-h-screen">
+      <header class="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
+        <div
+          class="container mx-auto px-6 py-4 flex justify-between items-center"
+        >
+          <h1 class="text-xl font-bold flex items-center gap-2">
+            <span>⚙️</span> Echoes CMS
+          </h1>
+          <button
+            id="admin-logout-btn"
+            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+      <main class="container mx-auto p-6 max-w-6xl">
+        
+        <!-- Admin Tab Navigation -->
+        <div class="flex border-b border-gray-200 mb-8 bg-white rounded-t-lg px-4 pt-4 shadow-sm">
+          <button id="tab-artifacts" class="px-6 py-3 text-orange-600 border-b-2 border-orange-600 font-bold focus:outline-none transition-colors hover:bg-orange-50 rounded-t-lg">Artifacts</button>
+          <button id="tab-tours" class="px-6 py-3 text-gray-500 hover:text-orange-600 font-bold focus:outline-none transition-colors hover:bg-gray-50 rounded-t-lg">Virtual Tours</button>
+        </div>
+
+        <!-- ARTIFACTS VIEW -->
+        <div id="admin-artifacts-view">
+            <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100">
+            <h2 id="form-title" class="text-2xl font-bold mb-6 font-lora text-gray-800 border-b pb-2">
+                Add New Artifact
+            </h2>
+            <form id="artifact-form">
+                <input type="hidden" id="artifact-id" />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Title"
+                    class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all"
+                    required
+                />
+                <input
+                    type="text"
+                    id="category"
+                    placeholder="Category"
+                    class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all"
+                    required
+                />
+                <input
+                    type="text"
+                    id="period"
+                    placeholder="Period"
+                    class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all"
+                    required
+                />
+                <input
+                    type="url"
+                    id="image"
+                    placeholder="Image URL"
+                    class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all"
+                    required
+                />
+                </div>
+                <textarea
+                id="description"
+                placeholder="Description"
+                rows="4"
+                class="p-3 border border-gray-300 rounded-lg w-full mt-6 focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all"
+                required
+                ></textarea>
+
+                <div class="mt-6">
+                <label
+                    for="modelUrl"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >3D Model URL (.glb)</label
+                >
+                <input
+                    type="url"
+                    id="modelUrl"
+                    placeholder="https://cdn.jsdelivr.net/gh/user/repo@main/model.glb"
+                    class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all"
+                />
+                </div>
+
+                <div class="flex items-center mt-4">
+                <input
+                    type="checkbox"
+                    id="has3dModel"
+                    class="h-5 w-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                />
+                <label for="has3dModel" class="ml-2 block text-sm font-medium text-gray-700"
+                    >This artifact has a 3D model</label
+                >
+                </div>
+
+                <div class="mt-8 flex gap-4">
+                <button
+                    type="submit"
+                    id="submit-btn"
+                    class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all transform hover:scale-105"
+                >
+                    Add Artifact
+                </button>
+                <button
+                    type="button"
+                    id="cancel-edit-btn"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all hidden"
+                >
+                    Cancel Edit
+                </button>
+                </div>
+            </form>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-md mt-8 border border-gray-100">
+            <h2 class="text-2xl font-bold mb-6 font-lora text-gray-800">Manage Artifacts</h2>
+            <div id="admin-artifacts-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- TOURS VIEW (Hidden by default) -->
+        <div id="admin-tours-view" class="hidden">
+            <div class="bg-white p-8 rounded-xl shadow-md border border-gray-100">
+                <h2 id="tour-form-title" class="text-2xl font-bold mb-6 font-lora text-gray-800 border-b pb-2">Add New Virtual Tour</h2>
+                <form id="tour-form">
+                    <input type="hidden" id="tour-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="text" id="tour-title" placeholder="Tour Name (e.g., Hampi)" class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all" required>
+                        <input type="url" id="tour-thumb" placeholder="Thumbnail Image URL" class="p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all" required>
+                    </div>
+                    <input type="url" id="tour-360-url" placeholder="360° Panoramic Image URL (Equirectangular)" class="mt-6 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all" required>
+                    <p class="text-xs text-gray-500 mt-1 ml-1">Must be a full 360x180 equirectangular JPG/PNG.</p>
+                    
+                    <textarea id="tour-desc" placeholder="Short Description" rows="3" class="p-3 border border-gray-300 rounded-lg w-full mt-6 focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all" required></textarea>
+                    
+                    <div class="mt-8 flex gap-4">
+                        <button type="submit" id="submit-tour-btn" class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all transform hover:scale-105">Add Tour</button>
+                        <button type="button" id="cancel-tour-edit-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all hidden">Cancel Edit</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-md mt-8 border border-gray-100">
+                <h2 class="text-2xl font-bold mb-6 font-lora text-gray-800">Manage Virtual Tours</h2>
+                <div id="admin-tours-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Modals -->
+    <div
+      id="artifactModal"
+      class="fixed inset-0 z-50 modal-bg hidden items-center justify-center p-4 transition-opacity duration-300"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl modal-content overflow-y-auto relative transform transition-all scale-95"
+        id="artifactModalContent"
+      >
+        <button
+          id="closeModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 z-10 bg-white rounded-full p-1 hover:bg-gray-100 transition-colors"
+        >
+          <svg
+            class="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+        <div id="modalContent" class="p-8 md:p-12"></div>
+      </div>
+    </div>
+
+    <div
+      id="tourModal"
+      class="fixed inset-0 z-50 modal-bg hidden items-center justify-center"
+    >
+      <div
+        class="bg-gray-900 w-full h-full md:w-[95vw] md:h-[90vh] md:rounded-2xl shadow-2xl relative flex flex-col overflow-hidden border border-gray-700"
+      >
+        <!-- Overlay Header -->
+        <div
+          class="absolute top-0 left-0 w-full p-6 z-20 pointer-events-none"
+          style="
+            background: linear-gradient(
+              to bottom,
+              rgba(0, 0, 0, 0.9),
+              rgba(0, 0, 0, 0)
+            );
+          "
+        >
+          <h2
+            id="tourModalTitle"
+            class="text-3xl font-bold font-lora text-white drop-shadow-lg"
+          >
+            Loading Tour...
+          </h2>
+          <p class="text-gray-300 text-sm mt-1 flex items-center gap-2">
+            <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+            Click and drag to look around
+          </p>
+        </div>
+
+        <button
+          id="closeTourModal"
+          class="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-2 z-30 transition-all duration-200 hover:scale-110"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- 3D Container -->
+        <div
+          id="tour-viewer-container"
+          class="w-full h-full bg-black"
+        >
+          <div
+            class="text-white text-center flex flex-col items-center justify-center h-full space-y-4"
+            id="tour-loading-text"
+          >
+            <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-lg font-medium">Loading 360° View...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="adminLoginModal"
+      class="fixed inset-0 z-50 modal-bg hidden items-center justify-center p-4"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-100">
+        <div class="text-center mb-6">
+            <div class="text-4xl mb-2">🔐</div>
+            <h2 class="text-2xl font-bold text-gray-800">Admin Login</h2>
+        </div>
+        <input
+          type="password"
+          id="admin-password"
+          placeholder="Enter Password"
+          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition-all"
+        />
+        <p id="login-error" class="text-red-500 text-sm mt-2 hidden flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Incorrect password.
+        </p>
+        <div class="flex justify-end gap-3 mt-8">
+          <button
+            id="cancel-login-btn"
+            class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            id="submit-login-btn"
+            class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all transform hover:scale-105"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NEW: CHATBOT UI ===== -->
+    <!-- Chat Toggle Button -->
+    <button id="chat-toggle-button" class="fixed bottom-8 right-8 bg-gradient-to-r from-orange-600 to-red-600 text-white p-4 rounded-full shadow-2xl transform hover:scale-110 transition-transform z-50">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-6.857 2.143L12 21l-2.143-6.857L3 12l6.857-2.143L12 3z"></path></svg>
+    </button>
+
+    <!-- UPDATED: Full-screen Chat Window -->
+    <div id="chat-window-container" class="fixed inset-0 z-[60] modal-bg hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="chat-window" class="w-full max-w-3xl h-[85vh] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col transform scale-95 transition-all duration-300">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-2xl">
+                <h3 class="text-xl font-bold font-lora text-transparent bg-clip-text bg-gradient-to-r from-orange-700 to-red-800 flex items-center gap-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-6.857 2.143L12 21l-2.143-6.857L3 12l6.857-2.143L12 3z"></path></svg>
+                    AI Trip Planner
+                </h3>
+                <button id="chat-close-button" class="text-gray-400 hover:text-gray-600 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chat-messages" class="flex-1 p-6 space-y-5 overflow-y-auto bg-white" style="scroll-behavior: smooth;">
+                <!-- Bot Welcome Message -->
+                <div class="flex justify-start">
+                    <div class="chat-bubble-bot p-4 rounded-xl max-w-lg shadow-sm">
+                        Hello! I'm Echo, your AI guide. How can I help you plan a trip to one of India's magnificent heritage sites today?
+                    </div>
+                </div>
+                <!-- Messages will be added here -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 border-t bg-white rounded-b-2xl">
+                <div class="flex gap-3 items-center bg-gray-100 rounded-xl p-2 border border-gray-200 focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-100 transition-all">
+                    <input type="text" id="chat-input" placeholder="Plan a 3-day trip to Hampi..." class="flex-1 p-2 bg-transparent outline-none text-gray-800 placeholder-gray-500">
+                    <button id="chat-send-button" class="bg-gradient-to-r from-orange-600 to-red-600 text-white p-3 rounded-lg font-semibold hover:from-orange-700 hover:to-red-700 transition-all transform hover:scale-105 shadow-md disabled:opacity-50">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ===== END CHATBOT UI ===== -->
+
+
+    <!-- External JavaScript Module - Loaded after Three.js -->
+    <script type="module" src="app.js" defer></script>
+  </body>
+</html>
